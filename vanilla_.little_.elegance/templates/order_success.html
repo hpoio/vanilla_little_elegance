@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}تم الطلب! — Vanilla Elegance{% endblock %}
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:120px 20px 60px;position:relative;z-index:1;">
+  <div class="success-card reveal">
+    <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+    <h1 class="success-title">تم وضع طلبك! 🎉</h1>
+    <p class="success-msg">شكراً لك <strong>{{ order.customer_first }} {{ order.customer_last }}</strong>،<br>سنتصل بك قريباً لتأكيد الطلب.</p>
+
+    <div class="tracking-badge">
+      <i class="fas fa-map-marker-alt"></i>
+      رقم تتبع طلبك:
+      <strong>{{ order.tracking_code }}</strong>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;margin-bottom:1.5rem;">
+      احتفظ بهذا الرقم لمتابعة حالة طلبك
+    </p>
+
+    <div class="success-details">
+      <div class="detail-row"><span class="dl">المنتج</span><span class="dr">{{ order.product_name }}{% if order.volume %} — {{ order.volume }}{% endif %}</span></div>
+      <div class="detail-row"><span class="dl">السعر</span>
+        <span class="dr" style="color:var(--gold);font-weight:700;">
+          {{ order.price }} د.ج
+          {% if order.discount_amount > 0 %}<span style="font-size:0.75rem;color:#50c878;"> (وفرت {{ order.discount_amount }} DA)</span>{% endif %}
+        </span>
+      </div>
+      <div class="detail-row"><span class="dl">الهاتف</span><span class="dr">{{ order.customer_phone }}</span></div>
+      <div class="detail-row"><span class="dl">الولاية</span><span class="dr">{{ order.wilaya }}</span></div>
+      <div class="detail-row">
+        <span class="dl">التوصيل</span>
+        <span class="dr">{% if order.delivery_type=='bureau' %}<i class="fas fa-store"></i> المكتب{% else %}<i class="fas fa-home"></i> المنزل{% endif %}</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:0.8rem;margin-top:2rem;">
+      <a href="/track" class="btn btn-outline-gold" style="width:100%;justify-content:center;">
+        <i class="fas fa-map-marker-alt"></i> تتبع طلبي
+      </a>
+      <a href="/" class="btn btn-gold" style="width:100%;justify-content:center;">
+        <i class="fas fa-arrow-left"></i> العودة للمتجر
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

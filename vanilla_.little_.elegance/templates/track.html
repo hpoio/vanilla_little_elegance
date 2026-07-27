@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}تتبع الطلب — Vanilla Elegance{% endblock %}
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:120px 20px 60px;position:relative;z-index:1;">
+  <div class="success-card reveal" style="max-width:540px;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="font-size:2.5rem;color:var(--gold);margin-bottom:1rem;"><i class="fas fa-map-marker-alt"></i></div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);letter-spacing:2px;">تتبع طلبك</h1>
+      <p style="color:var(--text-muted);margin-top:0.5rem;font-size:0.9rem;">أدخل رقم التتبع الخاص بطلبك</p>
+    </div>
+
+    <form method="POST" style="display:flex;gap:8px;margin-bottom:1.5rem;">
+      <input type="text" name="tracking_code" placeholder="MP-XXXXXXXX" required
+             style="flex:1;padding:14px;background:rgba(255,255,255,0.04);border:1px solid var(--gold-border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:'Tajawal',sans-serif;font-size:0.95rem;text-transform:uppercase;letter-spacing:2px;outline:none;"
+             {% if order %}value="{{ order.tracking_code }}"{% endif %}>
+      <button type="submit" class="btn btn-gold" style="padding:14px 20px;white-space:nowrap;">بحث</button>
+    </form>
+
+    {% if error %}
+    <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:var(--radius-sm);padding:14px;color:#e74c3c;text-align:center;">
+      <i class="fas fa-times-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if order %}
+    <div class="success-details">
+      <div class="detail-row"><span class="dl">رقم الطلب</span><span class="dr" style="color:var(--gold);font-weight:700;">{{ order.tracking_code }}</span></div>
+      <div class="detail-row"><span class="dl">المنتج</span><span class="dr">{{ order.product_name }}{% if order.volume %} — {{ order.volume }}{% endif %}</span></div>
+      <div class="detail-row"><span class="dl">السعر</span><span class="dr" style="color:var(--gold);">{{ order.price }} DA</span></div>
+      <div class="detail-row"><span class="dl">الولاية</span><span class="dr">{{ order.wilaya }}</span></div>
+      <div class="detail-row"><span class="dl">التوصيل</span>
+        <span class="dr">{% if order.delivery_type=='bureau' %}<i class="fas fa-store"></i> مكتب{% else %}<i class="fas fa-home"></i> منزل{% endif %}</span>
+      </div>
+      <div class="detail-row">
+        <span class="dl">الحالة</span>
+        <span class="dr">
+          {% if order.status == 'Pending' %}<span style="color:var(--gold);">⏳ قيد المعالجة</span>
+          {% elif order.status == 'Shipped' %}<span style="color:#6eb4ff;">🚚 في الطريق إليك</span>
+          {% else %}<span style="color:#50c878;">✅ تم التسليم</span>{% endif %}
+        </span>
+      </div>
+      <div class="detail-row"><span class="dl">تاريخ الطلب</span><span class="dr" style="font-size:0.85rem;color:var(--text-muted);">{{ order.timestamp.strftime('%Y-%m-%d %H:%M') }}</span></div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="track-progress">
+      <div class="track-step {% if order.status in ['Pending','Shipped','Delivered'] %}done{% endif %}">
+        <div class="track-dot"><i class="fas fa-check"></i></div>
+        <span>تم الاستلام</span>
+      </div>
+      <div class="track-line {% if order.status in ['Shipped','Delivered'] %}done{% endif %}"></div>
+      <div class="track-step {% if order.status in ['Shipped','Delivered'] %}done{% endif %}">
+        <div class="track-dot"><i class="fas fa-truck"></i></div>
+        <span>في الشحن</span>
+      </div>
+      <div class="track-line {% if order.status == 'Delivered' %}done{% endif %}"></div>
+      <div class="track-step {% if order.status == 'Delivered' %}done{% endif %}">
+        <div class="track-dot"><i class="fas fa-home"></i></div>
+        <span>تم التسليم</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <a href="/" class="btn btn-outline-gold" style="width:100%;justify-content:center;margin-top:1.5rem;">
+      <i class="fas fa-arrow-left"></i> العودة للمتجر
+    </a>
+  </div>
+</div>
+{% endblock %}

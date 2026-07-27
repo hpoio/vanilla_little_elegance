@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Checkout — Vanilla Elegance{% endblock %}
+{% block content %}
+<section class="page-section">
+  <div class="container" style="max-width:700px;">
+    <h1 class="page-title">Order Summary</h1>
+
+    <div id="checkout-empty" class="empty-state" style="display:none;">
+      <i class="fas fa-spray-can"></i>
+      <p>Your cart is empty</p>
+      <a href="/" class="btn btn-outline-gold">Discover Our Collection</a>
+    </div>
+
+    <div id="checkout-content">
+      <div class="order-card" style="margin-bottom:2rem;">
+        <table style="width:100%;border-collapse:collapse;" id="checkout-table">
+          <thead>
+            <tr style="border-bottom:1px solid var(--gold-border);">
+              <th style="padding:10px;color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-align:left;">IMAGE</th>
+              <th style="padding:10px;color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-align:left;">PRODUCT</th>
+              <th style="padding:10px;color:var(--gold);font-size:0.7rem;letter-spacing:2px;">QTY</th>
+              <th style="padding:10px;color:var(--gold);font-size:0.7rem;letter-spacing:2px;">PRICE</th>
+              <th style="padding:10px;color:var(--gold);font-size:0.7rem;letter-spacing:2px;">SUBTOTAL</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="checkout-body"></tbody>
+        </table>
+      </div>
+
+      <div class="order-card">
+        <div class="cart-total-row" style="font-size:1.2rem;margin-bottom:2rem;">
+          <span>Grand Total</span>
+          <span id="checkout-total" class="cart-total-price">0 DA</span>
+        </div>
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="co-name" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" id="co-phone" placeholder="Enter your phone number">
+        </div>
+        <div class="form-group">
+          <label>Shipping Address</label>
+          <textarea id="co-address" placeholder="Enter your shipping address"></textarea>
+        </div>
+        <button class="btn btn-instagram btn-checkout" onclick="sendOrder()">
+          <i class="fab fa-instagram"></i> Order Now via Instagram
+        </button>
+        <a href="/" class="btn btn-outline-gold btn-checkout" style="margin-top:0.8rem;">
+          <i class="fas fa-arrow-left"></i> Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  const CART_KEY = 'vanilla_elegance_cart';
+  function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } }
+  function fmt(n) { return n.toLocaleString() + ' DA'; }
+
+  function render() {
+    const cart = getCart();
+    const empty = document.getElementById('checkout-empty');
+    const content = document.getElementById('checkout-content');
+    const tbody = document.getElementById('checkout-body');
+    const totalEl = document.getElementById('checkout-total');
+
+    if (cart.length === 0) { empty.style.display = 'block'; content.style.display = 'none'; return; }
+    empty.style.display = 'none'; content.style.display = 'block';
+
+    let total = 0;
+    tbody.innerHTML = cart.map(item => {
+      const sub = item.price * item.quantity; total += sub;
+      return `<tr style="border-bottom:1px solid rgba(201,168,76,0.08);">
+        <td style="padding:12px;"><img src="/static/${item.image}" style="width:55px;height:55px;object-fit:cover;border-radius:8px;border:1px solid var(--gold-border);" onerror="this.src='/static/placeholder.jpg'"></td>
+        <td style="padding:12px;font-family:'Playfair Display',serif;">${item.name}</td>
+        <td style="padding:12px;text-align:center;">${item.quantity}</td>
+        <td style="padding:12px;text-align:center;color:var(--gold);">${fmt(item.price)}</td>
+        <td style="padding:12px;text-align:center;color:var(--gold);font-weight:700;">${fmt(sub)}</td>
+        <td style="padding:12px;"><button onclick="remove(${item.id})" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.25);color:#e74c3c;border-radius:8px;padding:6px 10px;cursor:pointer;"><i class="fas fa-trash-alt"></i></button></td>
+      </tr>`;
+    }).join('');
+    totalEl.textContent = fmt(total);
+  }
+
+  window.remove = function(id) {
+    let cart = getCart().filter(i => i.id !== id);
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    render();
+  };
+
+  window.sendOrder = function() {
+    const cart = getCart();
+    if (!cart.length) { alert('Your cart is empty.'); return; }
+    const name = document.getElementById('co-name').value.trim();
+    const phone = document.getElementById('co-phone').value.trim();
+    const address = document.getElementById('co-address').value.trim();
+    if (!name || !phone) { alert('Please fill in your name and phone number.'); return; }
+    let total = 0;
+    const items = cart.map((i, idx) => { total += i.price * i.quantity; return `${idx+1}. ${i.name} x${i.quantity} — ${(i.price*i.quantity).toLocaleString()} DA`; }).join('\n');
+    const msg = `Hello Vanilla Elegance!\nNew Order:\n\nCustomer: ${name}\nPhone: ${phone}${address ? '\nAddress: ' + address : ''}\n\nItems:\n${items}\n\nTotal: ${total.toLocaleString()} DA`;
+    window.open(`https://www.instagram.com/vanilla_.little_.elegance/`, '_blank');
+    alert('Please send this message on Instagram:\n\n' + msg);
+  };
+
+  render();
+})();
+</script>
+{% endblock %}

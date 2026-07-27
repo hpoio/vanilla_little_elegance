@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <h1 class="hero-title">VANILLA ELEGANCE</h1>
+  <p class="hero-title-ar">Little Elegance • أناقة نسائية راقية</p>
+  <p class="hero-subtitle">Discover Your Elegant Style</p>
+  <div class="hero-categories">
+    <a href="/shop" class="hero-cat-btn women">SHOP NOW | تسوقي الآن</a>
+  </div>
+</section>
+
+<!-- Products -->
+{% if products %}
+<section class="products-section">
+  <div class="container">
+    <div class="section-title">
+      <h2 class="women-title">OUR COLLECTION | تشكيلتنا</h2>
+      <div class="section-divider women-divider"></div>
+    </div>
+    <div class="products-grid">
+      {% for product in products %}
+      <div class="product-card women-card reveal">
+        <div class="product-image-wrapper">
+          <img src="{{ url_for('static', filename=product.image) }}" class="product-image" alt="{{ product.name }}" loading="lazy" onerror="this.src='/static/placeholder.jpg'">
+          {% if product.original_price %}<span class="product-badge badge-sale" style="top:10px;right:10px;left:auto;">SALE</span>{% endif %}
+        </div>
+        <div class="product-info">
+          <p class="product-cat">{{ product.category }}</p>
+          <h3 class="product-name">{{ product.name }}</h3>
+          <div class="product-price-row">
+            <span class="product-price">{{ product.price }} د.ج</span>
+            {% if product.original_price %}<span class="product-old-price">{{ product.original_price }} د.ج</span>{% endif %}
+          </div>
+          <div class="product-actions">
+            <button class="btn-cart btn-cart-women" data-id="{{ product.id }}" onclick="addToCart({{ product.id }}, '{{ product.name|e }}', {{ product.price }}, '{{ product.image }}', 'women')">
+              <i class="fas fa-cart-plus"></i> Add to Cart
+            </button>
+            <a href="/product/{{ product.id }}" class="btn-view"><i class="fas fa-eye"></i></a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<section class="products-section">
+  <div class="container">
+    <div class="empty-state">
+      <i class="fas fa-gem"></i>
+      <p>No products yet — add your first item from the Admin panel!</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

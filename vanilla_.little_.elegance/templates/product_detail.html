@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Vanilla Elegance{% endblock %}
+{% block content %}
+ 
+<div class="product-detail-grid">
+ 
+  <!-- ── Gallery ── -->
+  <div class="gallery-col reveal">
+    <div class="gallery-main-wrap">
+      <img id="main-photo" src="{{ url_for('static', filename=product.image) }}"
+           class="detail-img" alt="{{ product.name }}" onerror="this.src='/static/placeholder.jpg'">
+    </div>
+    {% set all_imgs = [product.image] + product.images %}
+    {% if all_imgs|length > 1 %}
+    <div class="gallery-thumbs">
+      {% for img in all_imgs %}
+      <img src="{{ url_for('static', filename=img) }}"
+           class="gallery-thumb {% if loop.first %}active-thumb{% endif %}"
+           onclick="switchPhoto(this, '{{ url_for('static', filename=img) }}')"
+           alt="{{ product.name }}" onerror="this.src='/static/placeholder.jpg'">
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+ 
+  <!-- ── Info + Order Form ── -->
+  <div class="detail-info reveal">
+    <p class="detail-cat">{{ product.category }}</p>
+    <h1 class="detail-name">{{ product.name }}</h1>
+ 
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+      <span class="detail-price" id="display-price">{{ product.price }} د.ج</span>
+      {% if product.original_price %}
+      <span class="product-old-price" style="font-size:1.1rem;">{{ product.original_price }} د.ج</span>
+      {% endif %}
+    </div>
+ 
+    {% if product.description %}
+    <p class="detail-desc">{{ product.description }}</p>
+    {% endif %}
+ 
+    {% if product.stock_quantity > 0 %}
+    <!-- ORDER FORM -->
+    <form method="POST" action="/order" id="order-form" class="order-form-card">
+      <input type="hidden" name="product_name" value="{{ product.name }}">
+      <input type="hidden" name="product_id"   value="{{ product.id }}">
+      <input type="hidden" name="price"        id="form-price" value="{{ product.price }}">
+      <input type="hidden" name="promo_code"   id="form-promo-code" value="">
+      <input type="hidden" name="discount_amount" id="form-discount" value="0">
+ 
+      <h3 class="order-form-title"><i class="fas fa-shopping-bag"></i> اطلب الآن</h3>
+ 
+      <!-- Name -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>الاسم <span class="req">*</span></label>
+          <input type="text" name="first_name" placeholder="الاسم" required>
+        </div>
+        <div class="form-group">
+          <label>اللقب <span class="req">*</span></label>
+          <input type="text" name="last_name" placeholder="اللقب" required>
+        </div>
+      </div>
+ 
+      <!-- Phone -->
+      <div class="form-group">
+        <label>رقم الهاتف <span class="req">*</span></label>
+        <input type="tel" name="phone" placeholder="05xxxxxxxx" required>
+      </div>
+ 
+      <!-- Sizes -->
+      {% if product.sizes %}
+      <div class="form-group">
+        <label>المقاس <span class="req">*</span></label>
+        <div class="size-options">
+          {% for s in product.sizes %}
+          <label class="size-card {% if loop.first %}selected{% endif %}"
+                 onclick="selectSize(this, {{ s.price }}, '{{ s.volume }}')">
+            <input type="radio" name="volume" value="{{ s.volume }}"
+                   {% if loop.first %}checked{% endif %} style="display:none;">
+            <span class="size-vol">{{ s.volume }}</span>
+            <span class="size-price">{{ s.price }} د.ج</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <input type="hidden" name="volume" value="Standard">
+      {% endif %}
+ 
+      <!-- Wilaya -->
+      <div class="form-group">
+        <label>الولاية <span class="req">*</span></label>
+        <select name="wilaya" required class="wilaya-select">
+          <option value="" disabled selected>اختر ولايتك...</option>
+          {% for w in wilayas %}
+          <option value="{{ w }}">{{ w }}</option>
+          {% endfor %}
+        </select>
+      </div>
+ 
+      <!-- Delivery -->
+      <div class="form-group">
+        <label>نوع التوصيل <span class="req">*</span></label>
+        <div class="delivery-options">
+          <label class="delivery-card selected" id="card-bureau">
+            <input type="radio" name="delivery_type" value="bureau" checked style="display:none;" onchange="selectDelivery('bureau')">
+            <div class="delivery-icon"><i class="fas fa-store"></i></div>
+            <div class="delivery-label">المكتب</div>
+            <div class="delivery-sub">Bureau de livraison</div>
+          </label>
+          <label class="delivery-card" id="card-domicile">
+            <input type="radio" name="delivery_type" value="domicile" style="display:none;" onchange="selectDelivery('domicile')">
+            <div class="delivery-icon"><i class="fas fa-home"></i></div>
+            <div class="delivery-label">المنزل</div>
+            <div class="delivery-sub">Livraison à domicile</div>
+          </label>
+        </div>
+      </div>
+ 
+      <!-- Promo Code -->
+      <div class="form-group">
+        <label>كود الخصم <span style="opacity:0.5;font-size:0.72rem;">اختياري</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="promo-input" placeholder="PROMO2024"
+                 style="flex:1;text-transform:uppercase;letter-spacing:2px;">
+          <button type="button" onclick="applyPromo()" class="btn btn-outline-gold"
+                  style="padding:10px 16px;font-size:0.8rem;white-space:nowrap;">تطبيق</button>
+        </div>
+        <div id="promo-msg" style="margin-top:6px;font-size:0.82rem;display:none;"></div>
+      </div>
+ 
+      <!-- Price summary -->
+      <div id="price-summary" style="display:none;background:rgba(201,168,76,0.06);border:1px solid var(--gold-border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--text-muted);">
+          <span>السعر الأصلي</span><span id="summary-orig">0 د.ج</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:#50c878;">
+          <span>الخصم</span><span id="summary-discount">- 0 د.ج</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:1.05rem;font-weight:700;color:var(--gold);margin-top:6px;border-top:1px solid var(--gold-border);padding-top:8px;">
+          <span>المجموع</span><span id="summary-final">0 د.ج</span>
+        </div>
+      </div>
+ 
+      <button type="submit" class="btn btn-gold btn-order-now">
+        <i class="fas fa-check-circle"></i> اطلب الآن
+      </button>
+    </form>
+    {% else %}
+    <button class="btn btn-outline-gold" disabled style="opacity:0.5;cursor:not-allowed;width:100%;margin-top:1.5rem;">
+      <i class="fas fa-times-circle"></i> نفد المخزون
+    </button>
+    {% endif %}
+ 
+    <a href="/" class="btn btn-outline-gold" style="margin-top:0.8rem;width:100%;justify-content:center;">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+</div>
+ 
+<!-- Related Products -->
+{% if related %}
+<section class="products-section" style="padding-top:20px;">
+  <div class="container">
+    <div class="section-title">
+      <h2 class="women-title">
+        قد يعجبك أيضاً
+      </h2>
+      <div class="section-divider women-divider"></div>
+    </div>
+    <div class="products-grid">
+      {% for p in related %}
+      <div class="product-card women-card reveal">
+        <div class="product-image-wrapper">
+          <img src="{{ url_for('static', filename=p.image) }}" class="product-image"
+               alt="{{ p.name }}" loading="lazy" onerror="this.src='/static/placeholder.jpg'">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">{{ p.name }}</h3>
+          <div class="product-price-row">
+            <span class="product-price">{{ p.price }} د.ج</span>
+          </div>
+          <div class="product-actions">
+            <a href="/product/{{ p.id }}" class="btn-cart btn-cart-women">
+              <i class="fas fa-eye"></i> عرض المنتج
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+ 
+<script>
+var basePrice = {{ product.price }};
+var currentPrice = basePrice;
+var currentDiscount = 0;
+ 
+function switchPhoto(el, src) {
+  document.getElementById('main-photo').src = src;
+  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active-thumb'));
+  el.classList.add('active-thumb');
+}
+ 
+function selectSize(el, price, volume) {
+  document.querySelectorAll('.size-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentPrice = price;
+  document.getElementById('form-price').value = price;
+  document.getElementById('display-price').textContent = price.toLocaleString() + ' د.ج';
+  // Re-apply discount if any
+  if (currentDiscount > 0) updatePriceSummary();
+}
+ 
+function selectDelivery(type) {
+  document.querySelectorAll('.delivery-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-' + type).classList.add('selected');
+}
+ 
+function applyPromo() {
+  const code = document.getElementById('promo-input').value.trim().toUpperCase();
+  const msg  = document.getElementById('promo-msg');
+  if (!code) return;
+  fetch('/api/promo', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({code: code, price: currentPrice})
+  })
+  .then(r => r.json())
+  .then(data => {
+    msg.style.display = 'block';
+    if (data.valid) {
+      currentDiscount = data.discount;
+      msg.style.color = '#50c878';
+      msg.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+      document.getElementById('form-promo-code').value = code;
+      document.getElementById('form-discount').value = currentDiscount;
+      updatePriceSummary();
+    } else {
+      currentDiscount = 0;
+      msg.style.color = '#e74c3c';
+      msg.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+      document.getElementById('form-promo-code').value = '';
+      document.getElementById('form-discount').value = 0;
+      document.getElementById('price-summary').style.display = 'none';
+    }
+  });
+}
+ 
+function updatePriceSummary() {
+  const final = Math.max(currentPrice - currentDiscount, 0);
+  document.getElementById('summary-orig').textContent = currentPrice.toLocaleString() + ' د.ج';
+  document.getElementById('summary-discount').textContent = '- ' + currentDiscount.toLocaleString() + ' د.ج';
+  document.getElementById('summary-final').textContent = final.toLocaleString() + ' د.ج';
+  document.getElementById('price-summary').style.display = 'block';
+}
+</script>
+ 
+{% endblock %}
+ 

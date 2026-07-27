@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Vanilla Elegance | Little Elegance{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Tajawal:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="particles"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/" class="logo"><span>Vanilla</span> Elegance</a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">HOME</a>
+    <a href="/shop" class="nav-link">SHOP (تسوقي)</a>
+    <a href="/track" class="nav-link">تتبع الطلب</a>
+    <a href="#contact" class="nav-link">CONTACT</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="nav-cart-btn" onclick="openCart()" aria-label="Cart">
+      <i class="fas fa-shopping-bag"></i>
+      <span id="cart-badge" class="cart-badge">0</span>
+    </button>
+    <button class="nav-hamburger" aria-label="Menu"><i class="fas fa-bars"></i></button>
+  </div>
+</nav>
+
+<!-- Cart Sidebar -->
+<div id="cart-overlay" class="cart-overlay"></div>
+<aside id="cart-sidebar" class="cart-sidebar">
+  <div class="cart-sidebar-header">
+    <h3><i class="fas fa-shopping-bag"></i> SHOPPING CART</h3>
+    <span id="cart-count-header" class="cart-count-header">0 items</span>
+    <button class="cart-close" onclick="closeCart()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="cart-items-container" class="cart-items-container"></div>
+  <div id="cart-empty-state" class="cart-empty-state">
+    <i class="fas fa-gem"></i>
+    <p>Your cart is empty</p>
+  </div>
+  <div id="cart-footer" class="cart-footer" style="display:none;">
+    <div class="cart-total-row">
+      <span>Total</span>
+      <span id="cart-total-price" class="cart-total-price">0 DA</span>
+    </div>
+    <a href="/checkout" class="btn btn-gold btn-checkout">
+      <i class="fas fa-shopping-bag"></i> Order Now
+    </a>
+  </div>
+</aside>
+
+{% block content %}{% endblock %}
+
+<!-- Contact / Footer -->
+<section id="contact" class="contact-section">
+  <h2 class="contact-title">CONTACT</h2>
+  <div class="social-links">
+    <a href="https://www.facebook.com/profile.php?id=61592154222347" target="_blank" class="social-btn facebook">
+      <div class="social-icon"><i class="fab fa-facebook-f"></i></div>
+      <span class="social-label">Facebook</span>
+    </a>
+    <a href="https://www.instagram.com/vanilla_.little_.elegance/" target="_blank" class="social-btn instagram">
+      <div class="social-icon"><i class="fab fa-instagram"></i></div>
+      <span class="social-label">Instagram</span>
+    </a>
+  </div>
+  <p class="footer-copy">&copy; 2026 Vanilla Elegance — All rights reserved.</p>
+</section>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

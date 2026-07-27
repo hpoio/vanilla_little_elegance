@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Admin Login - Vanilla Elegance{% endblock %}
+{% block content %}
+<section style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div style="width: 100%; max-width: 420px; background: rgba(26,13,16,0.95); border: 1px solid var(--rose-border); border-radius: var(--radius-lg); padding: 48px 40px; box-shadow: var(--shadow-rose); backdrop-filter: blur(8px);">
+
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 2.5rem; color: var(--rose-light); margin-bottom: 1rem;">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1 style="font-size: 1.8rem; color: var(--gold); letter-spacing: 3px; margin-bottom: 0.5rem;">Admin Access</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">Vanilla Elegance Management Panel</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="margin-bottom: 1.5rem; padding: 12px 16px; border-radius: 8px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); color: #e74c3c;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('admin_login') }}">
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user" style="margin-right: 6px;"></i>Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
+            </div>
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="password"><i class="fas fa-lock" style="margin-right: 6px;"></i>Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-gold" style="width: 100%; padding: 14px; font-size: 1rem; justify-content: center; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">
+            <i class="fas fa-lock" style="margin-right: 5px;"></i>Secure Admin Area
+        </p>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Admin — Vanilla Elegance{% endblock %}
+{% block content %}
+<section class="container" style="padding-top:100px;padding-bottom:60px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;">
+    <div>
+      <h1 style="color:var(--gold);font-family:'Playfair Display',serif;font-size:1.8rem;">Admin Dashboard</h1>
+      <p style="color:var(--text-muted);font-size:0.82rem;letter-spacing:1px;">Vanilla Elegance</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="/admin/export/orders" class="btn btn-outline-gold" style="padding:10px 18px;font-size:0.82rem;">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </a>
+      <a href="/va_admin/logout" class="btn btn-outline-gold" style="padding:10px 18px;font-size:0.82rem;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+      <div class="flash-msg flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <!-- ═══ STATS ═══ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+      <div class="stat-value">{{ stats.total_orders }}</div>
+      <div class="stat-label">إجمالي الطلبات</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#6eb4ff;"><i class="fas fa-calendar-day"></i></div>
+      <div class="stat-value" style="color:#6eb4ff;">{{ stats.orders_today }}</div>
+      <div class="stat-label">طلبات اليوم</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#50c878;"><i class="fas fa-coins"></i></div>
+      <div class="stat-value" style="color:#50c878;">{{ "{:,}".format(stats.total_revenue) }}</div>
+      <div class="stat-label">إجمالي المبيعات (DA)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:var(--pink);"><i class="fas fa-spray-can"></i></div>
+      <div class="stat-value" style="color:var(--pink);">{{ stats.top_products[0][0][:12] if stats.top_products else '—' }}</div>
+      <div class="stat-label">أكثر منتج مطلوب</div>
+    </div>
+  </div>
+
+  <div class="stats-row-2">
+    <div class="admin-section" style="flex:1;">
+      <h3 style="color:var(--gold);font-family:'Playfair Display',serif;margin-bottom:1rem;">🏆 أكثر المنتجات طلباً</h3>
+      {% for name,cnt in stats.top_products %}
+      <div class="top-row"><span>{{ loop.index }}. {{ name }}</span><span class="status-badge badge-pending">{{ cnt }} طلب</span></div>
+      {% else %}<p style="color:var(--text-muted);">لا يوجد بيانات بعد</p>{% endfor %}
+    </div>
+    <div class="admin-section" style="flex:1;">
+      <h3 style="color:var(--gold);font-family:'Playfair Display',serif;margin-bottom:1rem;">📍 أكثر الولايات طلباً</h3>
+      {% for w,cnt in stats.top_wilayas %}
+      <div class="top-row"><span>{{ w }}</span><span class="status-badge badge-shipped">{{ cnt }} طلب</span></div>
+      {% else %}<p style="color:var(--text-muted);">لا يوجد بيانات بعد</p>{% endfor %}
+    </div>
+  </div>
+
+  <!-- ═══ PRODUCTS ═══ -->
+  <div class="admin-section">
+    <div class="admin-header">
+      <h2>المنتجات</h2>
+      <button class="btn btn-gold" style="padding:10px 18px;font-size:0.82rem;" onclick="openModal('add-modal')">
+        <i class="fas fa-plus"></i> Add Product
+      </button>
+    </div>
+    {% if products %}
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead><tr><th>Product</th><th>Category</th><th>Sizes / Prices</th><th>Stock</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for p in products %}{% set sizes=p.get_sizes() %}
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><img src="/static/{{ p.image }}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--gold-border);" onerror="this.src='/static/placeholder.jpg'"><strong>{{ p.name }}</strong></div></td>
+            <td><span class="status-badge badge-pending">{{ p.category }}</span></td>
+            <td>{% if sizes %}{% for s in sizes %}<span class="status-badge badge-shipped" style="margin:2px;">{{ s.volume }} — {{ s.price }} DA</span>{% endfor %}{% else %}<span style="color:var(--text-muted);">{{ p.price }} DA</span>{% endif %}</td>
+            <td><form method="POST" action="/admin/product/{{ p.id }}/stock" style="display:flex;gap:6px;"><input type="number" name="stock_quantity" value="{{ p.stock_quantity }}" min="0" style="width:65px;padding:6px;background:rgba(0,0,0,0.4);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:6px;text-align:center;"><button type="submit" class="btn-small btn-sm-success"><i class="fas fa-save"></i></button></form></td>
+            <td><div class="action-btns">
+              <button class="btn-small btn-sm-gold" onclick="openEditModal({{ p.id }},'{{ p.name|e }}',{{ p.price }},'{{ p.original_price or '' }}','{{ p.category|e }}',{{ p.description|tojson }},{{ p.get_sizes()|tojson }})"><i class="fas fa-edit"></i></button>
+              <form method="POST" action="/admin/product/{{ p.id }}/delete" onsubmit="return confirm('Delete?');" style="display:inline;"><button type="submit" class="btn-small btn-sm-danger"><i class="fas fa-trash"></i></button></form>
+            </div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="empty-state"><i class="fas fa-spray-can"></i><p>No products yet.</p></div>{% endif %}
+  </div>
+
+  <!-- ═══ ORDERS ═══ -->
+  <div class="admin-section">
+    <div class="admin-header">
+      <h2>الطلبات</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="order-search" placeholder="بحث..." onkeyup="filterOrders()" style="padding:8px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.85rem;width:180px;">
+        <select id="filter-status" onchange="filterOrders()" style="padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);font-size:0.85rem;">
+          <option value="">كل الحالات</option>
+          <option value="Pending">Pending</option>
+          <option value="Shipped">Shipped</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+        <select id="filter-delivery" onchange="filterOrders()" style="padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);font-size:0.85rem;">
+          <option value="">كل التوصيل</option>
+          <option value="bureau">مكتب</option>
+          <option value="domicile">منزل</option>
+        </select>
+        <span style="color:var(--text-muted);font-size:0.82rem;">{{ orders|length }} طلب</span>
+      </div>
+    </div>
+    {% if orders %}
+    <div class="table-wrapper">
+      <table class="admin-table" id="orders-table">
+        <thead><tr><th>#</th><th>Tracking</th><th>Product</th><th>Price</th><th>Customer</th><th>Phone</th><th>Wilaya</th><th>Delivery</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for o in orders %}
+          <tr class="order-row" data-status="{{ o.status }}" data-delivery="{{ o.delivery_type }}" data-search="{{ (o.customer_first+' '+o.customer_last+' '+o.product_name+' '+o.wilaya+' '+o.tracking_code)|lower }}" {% if o.completed %}style="opacity:0.45;"{% endif %}>
+            <td>#{{ o.id }}</td>
+            <td><span style="font-family:monospace;font-size:0.8rem;color:var(--gold);">{{ o.tracking_code }}</span></td>
+            <td><strong>{{ o.product_name }}</strong>{% if o.volume %}<br><span style="font-size:0.75rem;color:var(--text-muted);">{{ o.volume }}</span>{% endif %}</td>
+            <td style="color:var(--gold);font-weight:700;">{{ o.price }} DA{% if o.discount_amount %}<br><span style="font-size:0.72rem;color:#50c878;">-{{ o.discount_amount }} DA</span>{% endif %}</td>
+            <td>{{ o.customer_first }} {{ o.customer_last }}</td>
+            <td>{{ o.customer_phone }}</td>
+            <td style="font-size:0.82rem;">{{ o.wilaya }}</td>
+            <td>{% if o.delivery_type=='bureau' %}<span class="status-badge badge-shipped"><i class="fas fa-store"></i> مكتب</span>{% else %}<span class="status-badge badge-delivered"><i class="fas fa-home"></i> منزل</span>{% endif %}</td>
+            <td><form method="POST" action="/order/{{ o.id }}/status" style="display:inline;"><select name="status" onchange="this.form.submit()" style="padding:5px 8px;background:rgba(0,0,0,0.4);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:6px;font-size:0.78rem;cursor:pointer;"><option value="Pending" {% if o.status=='Pending' %}selected{% endif %}>Pending</option><option value="Shipped" {% if o.status=='Shipped' %}selected{% endif %}>Shipped</option><option value="Delivered" {% if o.status=='Delivered' %}selected{% endif %}>Delivered</option></select></form></td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">{{ o.timestamp.strftime('%Y-%m-%d') }}<br>{{ o.timestamp.strftime('%H:%M') }}</td>
+            <td><div class="action-btns"><form method="POST" action="/order/{{ o.id }}/complete" style="display:inline;"><button type="submit" class="btn-small btn-sm-success" title="Toggle"><i class="fas fa-check"></i></button></form><form method="POST" action="/order/{{ o.id }}/delete" onsubmit="return confirm('Delete?');" style="display:inline;"><button type="submit" class="btn-small btn-sm-danger"><i class="fas fa-trash"></i></button></form></div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="empty-state"><i class="fas fa-inbox"></i><p>No orders yet.</p></div>{% endif %}
+  </div>
+
+  <!-- ═══ PROMO CODES ═══ -->
+  <div class="admin-section">
+    <div class="admin-header">
+      <h2>كودات الخصم</h2>
+      <button class="btn btn-gold" style="padding:10px 18px;font-size:0.82rem;" onclick="openModal('promo-modal')">
+        <i class="fas fa-plus"></i> Add Code
+      </button>
+    </div>
+    {% if promos %}
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Uses Left</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for pr in promos %}
+          <tr>
+            <td><strong style="font-family:monospace;letter-spacing:2px;color:var(--gold);">{{ pr.code }}</strong></td>
+            <td>{{ 'Percent %' if pr.type=='percent' else 'Fixed DA' }}</td>
+            <td>{{ pr.value }}{{ '%' if pr.type=='percent' else ' DA' }}</td>
+            <td>{{ 'Unlimited' if pr.uses_left==-1 else pr.uses_left }}</td>
+            <td><span class="status-badge {{ 'badge-delivered' if pr.active else 'badge-pending' }}">{{ 'Active' if pr.active else 'Inactive' }}</span></td>
+            <td><div class="action-btns">
+              <form method="POST" action="/admin/promo/{{ pr.id }}/toggle" style="display:inline;"><button type="submit" class="btn-small btn-sm-gold" title="Toggle"><i class="fas fa-power-off"></i></button></form>
+              <form method="POST" action="/admin/promo/{{ pr.id }}/delete" onsubmit="return confirm('Delete?');" style="display:inline;"><button type="submit" class="btn-small btn-sm-danger"><i class="fas fa-trash"></i></button></form>
+            </div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="empty-state"><i class="fas fa-tag"></i><p>No promo codes yet.</p></div>{% endif %}
+  </div>
+</section>
+
+<!-- ADD PRODUCT MODAL -->
+<div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('add-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3><i class="fas fa-plus-circle"></i> Add Product</h3><button class="modal-close" onclick="closeModal('add-modal')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <form method="POST" action="/admin/product/add" enctype="multipart/form-data">
+        <div class="form-group"><label>Name *</label><input type="text" name="name" required placeholder="e.g. فستان سهرة وردي"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group"><label>Category</label><select name="category" style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);width:100%;"><option value="فساتين">فساتين — Dresses</option><option value="بيجامات">بيجامات — Pajamas</option><option value="عبايات">عبايات — Abayas</option><option value="أطقم">أطقم — Sets</option><option value="إكسسوارات">إكسسوارات — Accessories</option><option value="Women">أخرى — Other</option></select></div>
+          <div class="form-group"><label>Stock</label><input type="number" name="stock_quantity" value="10" min="0"></div>
+        </div>
+        <div class="form-group"><label>Old Price (DA) <span style="opacity:0.5;font-size:0.72rem;">optional</span></label><input type="number" name="original_price" placeholder="e.g. 12000" min="0"></div>
+        <div class="form-group"><label>Description</label><textarea name="description" placeholder="Describe the item (fabric, fit, details)..." style="min-height:65px;"></textarea></div>
+        <div class="form-group">
+          <label>Sizes & Prices *</label>
+          <div id="add-sizes-container"><div class="size-row"><input type="text" name="vol_size[]" placeholder="e.g. M" style="padding:10px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);"><input type="number" name="vol_price[]" placeholder="Price DA" min="0" style="padding:10px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);"><button type="button" class="btn-remove-size" onclick="removeRow(this)"><i class="fas fa-times"></i></button></div></div>
+          <button type="button" class="btn-add-size" onclick="addSizeRow('add-sizes-container')"><i class="fas fa-plus"></i> Add size</button>
+        </div>
+        <div class="form-group"><label>Main Image *</label><input type="file" name="image" accept="image/*" required style="padding:10px;border:1px solid var(--gold-border);border-radius:var(--radius-sm);background:rgba(0,0,0,0.3);width:100%;"></div>
+        <div class="form-group"><label>Extra Images <span style="opacity:0.5;font-size:0.72rem;">optional — multiple</span></label><input type="file" name="extra_images" accept="image/*" multiple style="padding:10px;border:1px solid var(--gold-border);border-radius:var(--radius-sm);background:rgba(0,0,0,0.3);width:100%;"></div>
+        <button type="submit" class="btn btn-gold" style="width:100%;padding:14px;justify-content:center;margin-top:0.5rem;"><i class="fas fa-plus"></i> Add Product</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div id="edit-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('edit-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3><i class="fas fa-edit"></i> Edit Product</h3><button class="modal-close" onclick="closeModal('edit-modal')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <form id="edit-form" method="POST" enctype="multipart/form-data">
+        <div class="form-group"><label>Name</label><input type="text" name="name" id="edit-name" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group"><label>Category</label><select name="category" id="edit-category" style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);width:100%;"><option value="فساتين">فساتين — Dresses</option><option value="بيجامات">بيجامات — Pajamas</option><option value="عبايات">عبايات — Abayas</option><option value="أطقم">أطقم — Sets</option><option value="إكسسوارات">إكسسوارات — Accessories</option><option value="Women">أخرى — Other</option></select></div>
+          <div class="form-group"><label>Old Price (DA)</label><input type="number" name="original_price" id="edit-orig" min="0"></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea name="description" id="edit-desc" style="min-height:65px;"></textarea></div>
+        <div class="form-group">
+          <label>Sizes & Prices</label>
+          <div id="edit-sizes-container"></div>
+          <button type="button" class="btn-add-size" onclick="addSizeRow('edit-sizes-container')"><i class="fas fa-plus"></i> Add size</button>
+        </div>
+        <div class="form-group"><label>Add More Images <span style="opacity:0.5;font-size:0.72rem;">optional</span></label><input type="file" name="extra_images" accept="image/*" multiple style="padding:10px;border:1px solid var(--gold-border);border-radius:var(--radius-sm);background:rgba(0,0,0,0.3);width:100%;"></div>
+        <button type="submit" class="btn btn-gold" style="width:100%;padding:14px;justify-content:center;margin-top:0.5rem;"><i class="fas fa-save"></i> Save</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROMO MODAL -->
+<div id="promo-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('promo-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:440px;">
+    <div class="modal-header"><h3><i class="fas fa-tag"></i> New Promo Code</h3><button class="modal-close" onclick="closeModal('promo-modal')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <form method="POST" action="/admin/promo/add">
+        <div class="form-group"><label>Code *</label><input type="text" name="code" placeholder="SUMMER25" required style="text-transform:uppercase;letter-spacing:2px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group"><label>Type</label><select name="type" style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);width:100%;"><option value="percent">Percent %</option><option value="fixed">Fixed DA</option></select></div>
+          <div class="form-group"><label>Value *</label><input type="number" name="value" placeholder="e.g. 10" required min="1"></div>
+        </div>
+        <div class="form-group"><label>Max Uses <span style="opacity:0.5;font-size:0.72rem;">-1 = unlimited</span></label><input type="number" name="uses_left" value="-1"></div>
+        <button type="submit" class="btn btn-gold" style="width:100%;padding:14px;justify-content:center;"><i class="fas fa-plus"></i> Create Code</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id) { document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
+document.addEventListener('keydown', e => { if(e.key==='Escape') ['add-modal','edit-modal','promo-modal'].forEach(closeModal); });
+
+function addSizeRow(cid, vol='', price='') {
+  const c = document.getElementById(cid); const row = document.createElement('div'); row.className='size-row';
+  row.innerHTML=`<input type="text" name="vol_size[]" placeholder="e.g. L" value="${vol}" style="padding:10px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);"><input type="number" name="vol_price[]" placeholder="Price DA" value="${price}" min="0" style="padding:10px;background:rgba(0,0,0,0.3);border:1px solid var(--gold-border);color:var(--text-primary);border-radius:var(--radius-sm);"><button type="button" class="btn-remove-size" onclick="removeRow(this)"><i class="fas fa-times"></i></button>`;
+  c.appendChild(row);
+}
+function removeRow(btn) { btn.closest('.size-row').remove(); }
+
+function openEditModal(id, name, price, origPrice, category, description, sizes) {
+  document.getElementById('edit-form').action = '/admin/product/'+id+'/edit';
+  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-category').value = category;
+  document.getElementById('edit-orig').value = origPrice || '';
+  document.getElementById('edit-desc').value = description;
+  const c = document.getElementById('edit-sizes-container'); c.innerHTML='';
+  if (sizes && sizes.length > 0) { sizes.forEach(s => addSizeRow('edit-sizes-container', s.volume, s.price)); }
+  else { addSizeRow('edit-sizes-container','',price); }
+  openModal('edit-modal');
+}
+
+function filterOrders() {
+  const search = document.getElementById('order-search').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const delivery = document.getElementById('filter-delivery').value;
+  document.querySelectorAll('.order-row').forEach(row => {
+    const matchSearch = !search || row.dataset.search.includes(search);
+    const matchStatus = !status || row.dataset.status === status;
+    const matchDelivery = !delivery || row.dataset.delivery === delivery;
+    row.style.display = (matchSearch && matchStatus && matchDelivery) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
