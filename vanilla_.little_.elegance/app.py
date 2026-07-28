@@ -11,7 +11,7 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, static_folder=os.path.join(base_dir, 'static'), static_url_path='/static')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(base_dir, 'orders.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(base_dir, 'orders.db')).replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'vanilla-elegance-secret-2026')
 app.config['UPLOAD_FOLDER'] = os.path.join(base_dir, 'static')
