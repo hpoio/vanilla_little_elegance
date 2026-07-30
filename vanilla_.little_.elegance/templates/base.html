@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Tajawal:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -29,12 +29,9 @@ src="https://www.facebook.com/tr?id=1576927940538435&ev=PageView&noscript=1"
 <!-- End Meta Pixel Code -->
 </head>
 <body>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1407270694646659&ev=PageView&noscript=1"
-/></noscript>
-
+ 
 <div class="particles"></div>
-
+ 
 <!-- Navbar -->
 <nav class="navbar">
   <a href="/" class="logo"><span>Vanilla</span> Elegance</a>
@@ -52,7 +49,7 @@ src="https://www.facebook.com/tr?id=1407270694646659&ev=PageView&noscript=1"
     <button class="nav-hamburger" aria-label="Menu"><i class="fas fa-bars"></i></button>
   </div>
 </nav>
-
+ 
 <!-- Cart Sidebar -->
 <div id="cart-overlay" class="cart-overlay"></div>
 <aside id="cart-sidebar" class="cart-sidebar">
@@ -76,9 +73,9 @@ src="https://www.facebook.com/tr?id=1407270694646659&ev=PageView&noscript=1"
     </a>
   </div>
 </aside>
-
+ 
 {% block content %}{% endblock %}
-
+ 
 <!-- Contact / Footer -->
 <section id="contact" class="contact-section">
   <h2 class="contact-title">CONTACT</h2>
@@ -94,7 +91,7 @@ src="https://www.facebook.com/tr?id=1407270694646659&ev=PageView&noscript=1"
   </div>
   <p class="footer-copy">&copy; 2026 Vanilla Elegance — All rights reserved.</p>
 </section>
-
+ 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
-</html> 
+</html>
