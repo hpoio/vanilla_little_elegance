@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ product.name }} — Vanilla Elegance{% endblock %}
 {% block content %}
- 
+<script>
+  fbq('track', 'ViewContent', {
+    value: {{ product.price }},
+    currency: 'DZD',
+    content_name: '{{ product.name|e }}',
+    content_ids: ['{{ product.id }}'],
+    content_type: 'product'
+  });
+</script>
 <div class="product-detail-grid">
  
   <!-- ── Gallery ── -->
